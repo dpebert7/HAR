@@ -7,7 +7,7 @@ This repository includes code from a data mining project. The data set can be ac
 
 
 #### Results
-Coming soon.
+SVM probably gives the best results. More coming.
 
 
 #### To do list
@@ -25,4 +25,5 @@ Coming soon.
    - [ ] cross validation of at least one model
    - [ ] apply svm
    - [ ] multiple walkers
+ - [ ] Understand more about accelerometers
 
