@@ -1,4 +1,4 @@
-# Functions required for
+# Additional functions
 
 confmatrix=function(y,predy){
   matrix=table(y,predy)

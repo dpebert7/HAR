@@ -1,12 +1,29 @@
-#Models for HAR data
+# Updated 17 November 2015
+# David Ebert and Parker Rider
+# Models for HAR data
+
+
+###################
+### Import data ###
+###################
+
+
+X_train <- read.table("~/Desktop/HAR/Data/X_train.txt", quote="\"", comment.char="")
+X_test <- read.table("~/Desktop/HAR/Data/X_test.txt", quote="\"", comment.char="")
+
+y_train <- read.table("~/Desktop/HAR/Data/y_train.txt", quote="\"", comment.char="")
+y_test <- read.table("~/Desktop/HAR/Data/y_test.txt", quote="\"", comment.char="")
+
+
+
+
+
 
 
 
 #################
 ####  TREES #####
 #################
-
-
 
 library(rpart)
 library(rattle)
@@ -15,9 +32,9 @@ library(rattle)
 # http://archive.ics.uci.edu/ml/machine-learning-databases/00240/
 # UCI HAR Dataset.zips
 
-###
+##########################################
 # Case 1: Active and passive states Tree #
-###
+##########################################
 
 #set new y vectors to be TRUE/FALSE levels instead of 6 levels
 bin.y_train = as.factor(as.numeric(y_train$V1)>3)
@@ -51,9 +68,9 @@ confmatrix(bin.y_test, bin.test.tree.HAR.pred)
 
 
 
-###
+##############################
 # Case 2: All 6 States: Tree #
-###
+##############################
 
 HARtree = rpart(y_train$V1~., data = X_train)
 print(HARtree)
@@ -81,7 +98,6 @@ confmatrix(y_test$V1, test.tree.HAR.pred)
 
 # Double check to make sure HARtree categorizes active and passive states with 100% accuracy
 bin.train.tree.HAR.pred = predict(HARtree, newdata = X_train)
-bin.train.tree.HAR.pred = apply(bin.train.tree.HAR.pred, 1, which.max)
 bin.train.tree.HAR.pred = bin.train.tree.HAR.pred>3
 confmatrix(bin.y_train, bin.train.tree.HAR.pred)
 #Training accuracy: 100%
@@ -99,29 +115,27 @@ confmatrix(bin.y_train, bin.train.tree.HAR.pred)
 ####  naiveBayes  #####
 #######################
 
-
 library(e1071)
-
-
-#Bayesian methods applied to HAR
-
 
 #Build model
 HARbayes = naiveBayes(y_train$V1~., data = X_train)
 
 #Training data
-train.bayes.HAR.pred = predict(HARbayes, newdata = X_train)
+train.bayes.HAR.pred = predict(HARbayes, newdata = X_train, type = "raw")
+train.bayes.HAR.pred = apply(train.bayes.HAR.pred, 1, rand.which.max)
 confmatrix(y_train$V1, train.bayes.HAR.pred)
 #Training accuracy: 74.5%
 
+OAR.pred=HAR.levels[apply(vote.matrix,
+                          1,
+                          rand.which.max)]
+
 
 #Test data
-test.bayes.HAR.pred = predict(HARbayes, newdata = X_test)
+test.bayes.HAR.pred = predict(HARbayes, newdata = X_test, type = "raw")
+test.bayes.HAR.pred = apply(test.bayes.HAR.pred, 1, rand.which.max)
 confmatrix(y_test$V1, test.bayes.HAR.pred)
-#Test accuracy: 77.0% b
-
-
-
+#Test accuracy: 77.0% 
 
 
 
@@ -134,9 +148,7 @@ confmatrix(y_test$V1, test.bayes.HAR.pred)
 #### HAR SVM  #####
 ###################
 
-
 library(e1071)
-
 
 # Begin by importing X_test, X_train, y_test, and y_train from the UCI repository.
 # http://archive.ics.uci.edu/ml/machine-learning-databases/00240/
@@ -145,9 +157,6 @@ library(e1071)
 ###############################
 # Case 1: basic SVM in 2-case #
 ###############################
-
-help(svm)
-
 
 #Fit SVM model to training data
 bin.HARsvm = svm(bin.y_train~., data = X_train, kernel = "linear", cost = 1000)
@@ -158,8 +167,8 @@ confmatrix(bin.y_train, train.SVM.HAR.pred)
 bin.test.SVM.HAR.pred = predict(bin.HARsvm, newdata = X_test)
 confmatrix(bin.y_test, test.SVM.HAR.pred)
 
-# 100% Accuracy. Linear Separable. Yay!
 
+# 100% Accuracy. Linearly Separable. Yay!
 plot(X_train$V390, col = bin.y_train)
 # Because the data are in so many dimensions, it's difficult to see that it is linearly separable,
 # but column V390 gives a pretty good idea that the two classes are distinct.
