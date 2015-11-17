@@ -25,5 +25,5 @@ SVM probably gives the best results. More coming.
    - [ ] cross validation of at least one model
    - [ ] apply svm
    - [ ] multiple walkers
- - [ ] Understand more about accelerometers
+ - [ ] Understand more about accelerometers and gyroscopes
 

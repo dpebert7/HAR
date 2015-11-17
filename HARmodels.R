@@ -170,6 +170,7 @@ confmatrix(bin.y_test, test.SVM.HAR.pred)
 
 # 100% Accuracy. Linearly Separable. Yay!
 plot(X_train$V390, col = bin.y_train)
+plot(X_train$V390, col = y_train$V1)
 # Because the data are in so many dimensions, it's difficult to see that it is linearly separable,
 # but column V390 gives a pretty good idea that the two classes are distinct.
 
