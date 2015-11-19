@@ -32,7 +32,7 @@ library(rattle)
 
 
 
-n = 15
+n = 10
 set.seed(1)
 walkerID= sample(30,n)
 
@@ -54,10 +54,65 @@ test.treeresult = confmatrix(walkerY.sample[-train], test.treepred)
 
 # Accuracy with 3 walkers: ~97%
 # Accuracy with 10 walkers: ~84%
-# Accuracy with 15 walkers: 
-# Accuracy with 20 walkers: 
-# Accuracy with 25 walkers: 
-# Accuracy with all 30 walkers: 50%    <- THAT IS AWESOME!
+# Accuracy with 15 walkers: ~70%
+# Accuracy with 20 walkers: ~65%
+# Accuracy with 25 walkers: ~63%
+# Accuracy with all 30 walkers: 49.29%    <- THAT IS AWESOME!
+
+#Pretty print the above table:
+a = matrix(1:20, nrow = 5, ncol = 4)
+library(gridExtra)
+grid.table(a)
+grid.table(test.treeresult$matrix)
+
+write.table(test.treeresult$matrix, file = "tenWalkers.csv", sep = ",")
+
+#######################################################################
+### Find how tree accuracy changes with increased number of walkers ###
+#######################################################################
+
+maxWalkers = 29
+nIterations = 8
+
+bigAccVector = 1:maxWalkers
+
+set.seed(1)
+for(i in 2:maxWalkers){
+  
+  smallAccVector = 1:nIterations
+  
+  for(j in 1:nIterations){
+    
+    walkerID= sample(30,i)
+    
+    walkerX.sample = walkerX[walkerY %in% walkerID,]
+    walkerY.sample = as.factor(walkerY[walkerY %in% walkerID])
+    
+    # 70% training and 30% test data
+    train = sample(length(walkerY.sample), length(walkerY.sample)*.7)
+    
+    # rpart tree
+    library(rpart)
+    tree = rpart(walkerY.sample[train] ~., data = walkerX.sample[train,])
+    test.treepred = predict(tree, newdata = walkerX.sample[-train,], type = "class")
+    test.treeresult = confmatrix(walkerY.sample[-train], test.treepred)
+    
+    smallAccVector[j] = test.treeresult$accuracy
+  }
+  print(i)
+  bigAccVector[i] = mean(smallAccVector)
+}
+
+bigAccVector
+
+finalAccVector = c(bigAccVector, 0.4992) #Note that the case of 30 walkers is the same no matter which 30 are chosen...
+
+plot(finalAccVector,
+     xlab = "Number of Walkers Compared",
+     ylab = "Average Accuracy of Tree Over 8 Iterations",
+     main = "Trees: Number of Walkers vs Model Accuracy")
+
+
 
 
 #####################################################################
