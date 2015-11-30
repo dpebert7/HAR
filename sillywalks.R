@@ -1,47 +1,211 @@
-# Reduce training data so it is only 1, 2, or 3: Walking, walking up, or walking down.
-active.X_train = X_train[(as.numeric(y_train$V1) < 4),]
-active.X_test = X_test[(as.numeric(y_test$V1) < 4),]
+# Given walking data for 2 people, can we determine who the person is?
 
-active.y_train = y_train[(as.numeric(y_train$V1) < 4),]
-active.y_test = y_test[(as.numeric(y_test$V1) < 4),]
+#######################
+#### Set up data ######
+#######################
 
-active.subject_test = as.factor(subject_test[(as.numeric(y_test$V1) < 4),])
-active.subject_train = as.factor(subject_train[(as.numeric(y_train$V1) < 4),])
-
+# Import subject factor data
+subject_train <- read.table("~/Desktop/HAR/Data/subject_train.txt", quote="\"", comment.char="")
+subject_test <- read.table("~/Desktop/HAR/Data/subject_test.txt", quote="\"", comment.char="")
 
 # Combine data into one large data frame
+walkerY = rbind(subject_train, subject_test)
+walkerX = rbind(X_train, X_test)
+
+# Reduce training data so it is only 1, 2, or 3: Walking, walking up, or walking down.
+walkerX = walkerX[(as.numeric(y_train$V1) < 4),]
+walkerY = walkerY[(as.numeric(y_train$V1) <4),]
 
 
+#Select walker records for walkers 1,2, 3, and 7
+walkerX.example = walkerX[walkerY %in% c(1:3, 7),]
+walkerY.example = walkerY[walkerY %in% c(1:3, 7)]
 
 
+########################################################################
+### Use a tree to find training and test accuracy for n<= 30 walkers ###
+########################################################################
 
-# Select volunteers 1 and 3 from active.subject_train
-table(active.subject_train)
+library(rpart)
+library(rattle)
 
-# 1 3 5 6 7 8 11 15 16...
-
-
-active.X_1 = active.X_train[active.subject_train == 6,]
-active.X_3 = active.X_train[active.subject_train == 7,]
-active.subject_1 = active.subject_train[active.subject_train == 6]
-active.subject_3 = active.subject_train[active.subject_train == 7]
-
-
-active.X = rbind(active.X_1, active.X_3)
-active.y = as.factor(rbind(c(active.subject_1, active.subject_3)))
-
-
-# Split active.X into 70% training data
+n = 10
 set.seed(1)
-train=sample(nrow(active.X),nrow(active.X)*.7)
+walkerID= sample(30,n)
+
+walkerX.sample = walkerX[walkerY %in% walkerID,]
+walkerY.sample = as.factor(walkerY[walkerY %in% walkerID])
+
+# 70% training and 30% test data
+train = sample(length(walkerY.sample), length(walkerY.sample)*.7)
 
 # rpart tree
 library(rpart)
-tree = rpart(active.y[train]~., data = active.X[train,])
-treepred = predict(tree, newdata = active.X[-train,], type = "class")
-confmatrix(active.y[-train], treepred)
+tree = rpart(walkerY.sample[train] ~., data = walkerX.sample[train,])
+train.treepred = predict(tree, newdata = walkerX.sample[train,], type = "class")
+train.treeresult = confmatrix(walkerY.sample[train], train.treepred)
+
+test.treepred = predict(tree, newdata = walkerX.sample[-train,], type = "class")
+test.treeresult = confmatrix(walkerY.sample[-train], test.treepred)
+
+
+# Accuracy with 3 walkers: ~97%
+# Accuracy with 10 walkers: ~84%
+# Accuracy with 15 walkers: ~70%
+# Accuracy with 20 walkers: ~65%
+# Accuracy with 25 walkers: ~63%
+# Accuracy with all 30 walkers: 49.29%    <- THAT IS AWESOME!
+
+#Pretty print the above table:
+a = matrix(1:20, nrow = 5, ncol = 4)
+library(gridExtra)
+grid.table(a)
+grid.table(test.treeresult$matrix)
+
+write.table(test.treeresult$matrix, file = "tenWalkers.csv", sep = ",")
+
+#######################################################################
+### Find how tree accuracy changes with increased number of walkers ###
+#######################################################################
+
+maxWalkers = 29
+nIterations = 8
+
+bigAccVector = 1:maxWalkers
+
+set.seed(1)
+for(i in 2:maxWalkers){
+  
+  smallAccVector = 1:nIterations
+  
+  for(j in 1:nIterations){
+    
+    walkerID= sample(30,i)
+    
+    walkerX.sample = walkerX[walkerY %in% walkerID,]
+    walkerY.sample = as.factor(walkerY[walkerY %in% walkerID])
+    
+    # 70% training and 30% test data
+    train = sample(length(walkerY.sample), length(walkerY.sample)*.7)
+    
+    # rpart tree
+    library(rpart)
+    tree = rpart(walkerY.sample[train] ~., data = walkerX.sample[train,])
+    test.treepred = predict(tree, newdata = walkerX.sample[-train,], type = "class")
+    test.treeresult = confmatrix(walkerY.sample[-train], test.treepred)
+    
+    smallAccVector[j] = test.treeresult$accuracy
+  }
+  print(i)
+  bigAccVector[i] = mean(smallAccVector)
+}
+
+bigAccVector
+
+finalAccVectorTREE = c(bigAccVector, 0.4992) #Note that the case of 30 walkers is the same no matter which 30 are chosen...
+
+plot(finalAccVectorTREE,
+     xlab = "Number of Walkers Compared",
+     ylab = "Average Accuracy of Model Over 8 Iterations",
+     main = "SVM: Number of Walkers vs Model Accuracy")
 
 
 
 
+
+
+
+
+
+
+
+#####################################################################
+### Use SVM to find training and test accuracy for n<= 30 walkers ###
+#####################################################################
+
+library(e1071)
+
+n = 30
+set.seed(1)
+walkerID= sample(30,n)
+
+walkerX.sample = walkerX[walkerY %in% walkerID,]
+walkerY.sample = as.factor(walkerY[walkerY %in% walkerID])
+
+# 70% training and 30% test data
+train = sample(length(walkerY.sample), length(walkerY.sample)*.7)
+
+# svm model
+svmModel = svm(walkerY.sample[train] ~., data = walkerX.sample[train,])
+train.svmpred = predict(svmModel, newdata = walkerX.sample[train,], type = "class")
+train.svmresult = confmatrix(walkerY.sample[train], train.svmpred)
+train.svmresult
+
+test.svmpred = predict(svmModel, newdata = walkerX.sample[-train,], type = "class")
+test.svmresult = confmatrix(walkerY.sample[-train], test.svmpred)
+test.svmresult
+
+# Accuracy with 3 walkers: 
+# Accuracy with 10 walkers: 
+# Accuracy with 15 walkers: 
+# Accuracy with 20 walkers: 
+# Accuracy with 25 walkers: 
+# Accuracy with all 30 walkers:     <- THAT IS AWESOME!
+
+#Pretty print the above table:
+a = matrix(1:20, nrow = 5, ncol = 4)
+library(gridExtra)
+grid.table(a)
+grid.table(test.treeresult$matrix)
+
+write.table(test.treeresult$matrix, file = "tenWalkers.csv", sep = ",")
+
+#######################################################################
+### Find how tree accuracy changes with increased number of walkers ###
+#######################################################################
+
+maxWalkers = 29
+nIterations = 8
+
+bigAccVector = 1:maxWalkers
+
+set.seed(1)
+for(i in 2:maxWalkers){
+  
+  smallAccVector = 1:nIterations
+  
+  for(j in 1:nIterations){
+    
+    walkerID= sample(30,i)
+    
+    walkerX.sample = walkerX[walkerY %in% walkerID,]
+    walkerY.sample = as.factor(walkerY[walkerY %in% walkerID])
+    
+    # 70% training and 30% test data
+    train = sample(length(walkerY.sample), length(walkerY.sample)*.7)
+    
+    # rpart tree
+    svmModel = svm(walkerY.sample[train] ~., data = walkerX.sample[train,])
+    test.svmpred = predict(svmModel, newdata = walkerX.sample[-train,], type = "class")
+    test.svmresult = confmatrix(walkerY.sample[-train], test.svmpred)
+    
+    smallAccVector[j] = test.svmresult$accuracy
+  }
+  print(i)
+  bigAccVector[i] = mean(smallAccVector)
+}
+
+bigAccVector
+
+finalAccVectorSVM = c(bigAccVector, 0.9496) #Note that the case of 30 walkers is the same no matter which 30 are chosen...
+
+plot(finalAccVectorTREE,
+     xlab = "Number of Walkers Compared",
+     ylab = "Average Accuracy of Model Over 8 Iterations",
+     main = "SVM: Number of Walkers vs Model Accuracy",
+     type = "l",
+     col = "red")
+lines(finalAccVectorSVM,
+      type = "l",
+      col = "black")
 
