@@ -2,7 +2,6 @@
 # David Ebert and Parker Rider
 # Models for HAR data
 
-#Hey hey hey
 
 ###################
 ### Import data ###
