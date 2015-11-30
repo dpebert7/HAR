@@ -1,0 +1,16 @@
+Test Accuracies of Classification MOdels
+
+Classifying Activities:
+	Trees: 100%
+
+6-Case Classification:
+	Trees: 82.9%
+	naiveBayes: 77.0%
+	untuned SVM: 95.1%
+	tuned SVM: 96.3%    gamma = 1e-04; cost = 10000
+		
+	
+
+
+Walkers:
+	

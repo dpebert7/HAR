@@ -20,8 +20,6 @@ y_test <- read.table("~/Desktop/HAR/Data/y_test.txt", quote="\"", comment.char="
 
 
 
-
-
 #################
 ####  TREES #####
 #################
@@ -69,6 +67,9 @@ confmatrix(bin.y_test, bin.test.tree.HAR.pred)
 
 
 
+
+
+
 ##############################
 # Case 2: All 6 States: Tree #
 ##############################
@@ -87,9 +88,9 @@ confmatrix(y_train$V1, train.tree.HAR.pred)
 
 #Test
 test.tree.HAR.pred = predict(HARtree, newdata = X_test)
-test.tree.HAR.pred = apply(test.tree.HAR.pred, 1, which.max)
+#test.tree.HAR.pred = apply(test.tree.HAR.pred, 1, which.max)
 confmatrix(y_test$V1, test.tree.HAR.pred)
-
+# Test Accuracy: 82.9%
 
 # Details of HARtree:
 # V53 -> 6
@@ -259,6 +260,10 @@ autoSVMmodel.pred = predict(autoSVMmodel, newdata = X_test)
 confmatrix(y_test$V1, autoSVMmodel.pred)
 # This code does the same thing as above, except it's better and is only 3 lines instead of lots.
 # Accuracy: 95.1%
+
+
+
+
 
 
 #############################################################
