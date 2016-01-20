@@ -14,16 +14,16 @@ SVM probably gives the best results. More coming.
  - [x] Trees
    - [x] basics
    - [x] picture of 2-category case
- - [ ] SVM
+ - [x] SVM
    - [x] basic
-   - [ ] tune SVM
+   - [x] tune SVM
  - [x] naiveBayes
- - [ ] Neural networks - Parker
- - [ ] K nearest neighbor
- - [ ] Silly walks
+ - [x] Neural networks - Parker
+ - [x] K nearest neighbor
+ - [x] Silly walks
    - [x] basic comparing 2 walkers with trees
-   - [ ] cross validation of at least one model
-   - [ ] apply svm
-   - [ ] multiple walkers
- - [ ] Understand more about accelerometers and gyroscopes
+   - [x] cross validation of at least one model
+   - [x] apply svm
+   - [x] multiple walkers
+ - [x] Understand more about accelerometers and gyroscopes
 
